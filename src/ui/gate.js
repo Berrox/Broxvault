@@ -93,7 +93,7 @@ export function showSetup(root, store, onDone, ctx = null) {
     const ok = el('input', { type: 'checkbox', id: 'ok' }), go = next('Tresor öffnen', onDone); go.disabled = true;
     ok.addEventListener('change', () => { go.disabled = !ok.checked; });
     show(el('h1', {}, 'Dein Tresor ist erstellt'),
-      el('p', {}, 'Wichtig: Wenn der Browser seine Daten löscht, dein Gerät verloren geht oder du das Master-Passwort vergisst, sind die Daten ohne Backup weg. Backups kommen in einer späteren Version; bis dahin lege hier nichts ab, was du nicht verlieren darfst.'),
+      el('p', {}, 'Wichtig: Wenn der Browser seine Daten löscht, dein Gerät verloren geht oder du das Master-Passwort vergisst, sind die Daten ohne Backup weg. Erstelle deshalb gleich nach den ersten Einträgen ein Backup unter „Speicher & Backups“ und bewahre die Datei außerhalb dieses Geräts auf. Das Backup bekommt ein eigenes Passwort.'),
       el('label', { class: 'check' }, ok, el('span', {}, 'Ich habe verstanden, dass ich meine Daten ohne Master-Passwort und Backup nicht wiederherstellen kann.')), go);
   };
   welcome();

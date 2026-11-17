@@ -15,10 +15,6 @@ function mehr() {
     el('div', { class: 'list' }, ...sections.filter((s) => !['dashboard', 'passwoerter', 'dokumente', 'fotos'].includes(s.id))
       .map((s) => el('a', { class: 'card row', href: '#/' + s.id }, icon(s.icon), el('span', {}, s.title)))));
 }
-function placeholder(s) {
-  return el('div', {}, ...heading(s.title, s.text),
-    el('div', { class: 'card empty' }, el('b', {}, 'Dieser Bereich folgt in Phase ' + s.phase + '.'), el('span', {}, 'Die Navigation und das Layout stehen bereits.')));
-}
 export function renderView(id, ctx) {
   if (id === 'dashboard') return dashboard(ctx);
   if (id === 'passwoerter') return entityView(passwordSpec, ctx);
@@ -30,5 +26,5 @@ export function renderView(id, ctx) {
   if (id === 'einstellungen') return settingsView(ctx);
   if (id === 'suche') return searchView();
   if (id === 'mehr') return mehr();
-  return placeholder(sections.find((x) => x.id === id));
+  return dashboard(ctx);
 }

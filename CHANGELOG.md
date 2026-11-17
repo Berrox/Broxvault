@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.9.0 – Phase 9: Qualitätskontrolle
+- Master-Passwort ändern in den Einstellungen (Funktion war seit 0.3.0 vorhanden, jetzt mit Oberfläche)
+- Einrichtungsassistent: Backup-Hinweis aktualisiert (Backups gibt es seit 0.7.0)
+- Foto-Vollbild: Tastatur-Handler und Blob-URL werden beim Verlassen der Ansicht freigegeben
+- Toter Code entfernt (Platzhalteransicht)
+- Neue Tests: OPFS-Logik gegen nachgebildetes Dateisystem, Quelltext-Sicherheitsprüfung, Klartext-Suche über die gesamte Datenbank, feindliche Eingaben, Löschbestätigungen, Datenverlust-Regeln, kompletter Lebenslauf (186 Tests)
+- Dokumentation: README, ARCHITECTURE, SECURITY, DEVELOPMENT (inkl. Abnahme-Checkliste), DEPLOYMENT, BACKUP_FORMAT
+
 ## 0.8.0 – Phase 8: Offline-Betrieb und Veröffentlichung
 - Service Worker: nur statische App-Dateien, kein Zugriff auf Tresordaten, Offline-Seite, Version abfragbar
 - Kontrolliertes Update: neue Version wartet, Aktivierung nur nach Bestätigung, bei gesperrtem Tresor und ohne laufenden Vorgang

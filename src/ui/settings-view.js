@@ -4,7 +4,10 @@ import { saveSettings } from '../core/settings.js';
 import { startAutoLock } from '../core/autolock.js';
 import { deriveKek } from '../core/crypto/kdf.js';
 import { randomBytes } from '../core/crypto/random.js';
-import { DEFAULT_KDF } from '../core/keys/vault.js';
+import { DEFAULT_KDF, changePassword, MIN_PASSWORD_LENGTH, WrongPasswordError } from '../core/keys/vault.js';
+import { createMetaStore } from '../core/db/idb.js';
+import { withBusy } from '../pwa/busy.js';
+import { estimateBits, strengthText } from '../core/strength.js';
 import { APP_VERSION, BUILD_ID, checkForUpdate, getSwVersion, applyUpdate, updateAvailable, onUpdateChange } from '../pwa/update.js';
 import { isStandalone, isIOS, canPrompt, promptInstall, onInstallChange } from '../pwa/install.js';
 
@@ -32,6 +35,27 @@ export function appCard() {
     el('p', { class: 'hint' }, 'Neue Versionen werden erst nach deiner Bestätigung aktiviert, und nur bei gesperrtem Tresor. Deine Daten bleiben bei Updates immer erhalten.'));
 }
 
+// ---------- Master-Passwort ändern ----------
+export function passwordCard(ctx) {
+  const f = (id, label, ac) => { const i = el('input', { id, type: 'password', autocomplete: ac, autocapitalize: 'off', spellcheck: 'false' }); return { i, node: el('div', { class: 'field' }, el('label', { for: id }, label), i) }; };
+  const o = f('mp0', 'Aktuelles Master-Passwort', 'current-password'), n1 = f('mp1', 'Neues Master-Passwort', 'new-password'), n2 = f('mp2', 'Neues Master-Passwort wiederholen', 'new-password');
+  const hint = el('p', { class: 'hint' }, 'Mindestens ' + MIN_PASSWORD_LENGTH + ' Zeichen. Nur der Tresorschlüssel wird neu verpackt: deine Daten und bestehende Backups bleiben unverändert gültig (Backups haben ein eigenes Passwort).');
+  n1.i.addEventListener('input', () => { hint.textContent = n1.i.value ? strengthText(estimateBits(n1.i.value)) : 'Mindestens ' + MIN_PASSWORD_LENGTH + ' Zeichen.'; });
+  const msg = el('p', { class: 'msg', role: 'alert' }), ok = el('p', { class: 'hint', role: 'status' });
+  const go = el('button', { type: 'button', class: 'btn primary' }, 'Master-Passwort ändern');
+  go.addEventListener('click', () => withBusy(async () => {
+    msg.textContent = ''; ok.textContent = '';
+    if (!o.i.value) { msg.textContent = 'Bitte gib dein aktuelles Master-Passwort ein.'; return; }
+    if (n1.i.value !== n2.i.value) { msg.textContent = 'Die beiden neuen Passwörter stimmen nicht überein.'; return; }
+    if ([...n1.i.value.normalize('NFKC')].length < MIN_PASSWORD_LENGTH) { msg.textContent = 'Das neue Master-Passwort muss mindestens ' + MIN_PASSWORD_LENGTH + ' Zeichen lang sein.'; return; }
+    go.disabled = true; ok.textContent = 'Wird geändert … das kann einige Sekunden dauern.'; await new Promise((r) => setTimeout(r, 60));
+    try { await changePassword(o.i.value, n1.i.value, createMetaStore(ctx.db)); o.i.value = n1.i.value = n2.i.value = ''; ok.textContent = 'Das Master-Passwort wurde geändert. Beim nächsten Entsperren gilt das neue Passwort.'; }
+    catch (e) { ok.textContent = ''; msg.textContent = e instanceof WrongPasswordError ? 'Das aktuelle Master-Passwort ist falsch. Es wurde nichts geändert.' : 'Ändern fehlgeschlagen. Es wurde nichts geändert.'; }
+    go.disabled = false;
+  }));
+  return el('div', { class: 'card field' }, el('b', {}, 'Master-Passwort ändern'), o.node, n1.node, n2.node, hint, msg, ok, go);
+}
+
 export function settingsView(ctx) {
   const s = ctx.settings, save = async (relock) => { await saveSettings(ctx.db, s); if (relock) startAutoLock(s); };
   const select = (id, label, opts, key, relock, fmt) => el('div', { class: 'field' }, el('label', { for: id }, label),
@@ -50,7 +74,8 @@ export function settingsView(ctx) {
       select('br', 'Backup-Erinnerung nach', [7, 14, 30, 60, 90], 'backupReminderDays', false, (v) => v + ' Tagen')),
     el('div', { class: 'actions' }, el('button', { type: 'button', class: 'btn primary', onclick: lock }, 'Tresor sperren')),
     el('p', { class: 'hint' }, 'Die Zwischenablage lässt sich nur als Ganzes leeren; ein Browser erlaubt nicht, nur den kopierten Eintrag zu entfernen. Auf manchen Geräten klappt das Leeren im Hintergrund nicht.'),
+    passwordCard(ctx),
     appCard(),
     el('div', { class: 'card field' }, el('b', {}, 'Technik'), el('span', { class: 'hint' }, 'Misst, wie lange das Entsperren auf diesem Gerät dauert.'), bench, out),
-    el('p', { class: 'hint' }, 'Master-Passwort ändern: folgt in der Oberfläche später (die Funktion ist bereits getestet).'));
+    el('p', { class: 'hint' }, 'Es gibt keine Passwort-Wiederherstellung: ohne Master-Passwort und ohne Backup sind die Daten verloren.'));
 }

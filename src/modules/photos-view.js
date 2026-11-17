@@ -71,7 +71,7 @@ export function photosView(ctx) {
     let list2 = items.slice(), i = start, cur = null, url = null, infoOpen = false;
     const overlay = el('div', { class: 'overlay', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Foto', tabindex: '-1' }), img = el('img', { alt: '' }), msg = el('p', { class: 'msg', role: 'alert' }), info = el('div', { class: 'card field info' }), title = el('b', {});
     const close = () => { document.removeEventListener('keydown', onKey); if (url) releaseUrl(url); overlay.remove(); list(); };
-    const onKey = (e) => { if (e.key === 'Escape') close(); else if (e.key === 'ArrowRight') go(1); else if (e.key === 'ArrowLeft') go(-1); };
+    const onKey = (e) => { if (!overlay.isConnected) { document.removeEventListener('keydown', onKey); if (url) releaseUrl(url); return; } if (e.key === 'Escape') close(); else if (e.key === 'ArrowRight') go(1); else if (e.key === 'ArrowLeft') go(-1); };
     const go = (d) => { if (list2.length > 1) at((i + d + list2.length) % list2.length); };
     async function at(n) {
       i = n; const m = cur = list2[i]; if (url) { releaseUrl(url); url = null; } img.removeAttribute('src'); msg.textContent = ''; title.textContent = m.name; renderInfo(m);
